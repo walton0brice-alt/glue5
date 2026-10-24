@@ -12,6 +12,10 @@
 
 use std::path::{Path, PathBuf};
 
+#[cfg(target_os = "ios")]
+#[path = "save_import.rs"]
+mod save_import;
+
 use anyhow::{Context, Result};
 
 /// Phones, tablets and the Apple TV: apps the system runs full screen and
@@ -27,7 +31,18 @@ pub const TOUCH: bool = cfg!(any(target_os = "ios", target_os = "android"));
 pub const TV: bool = cfg!(target_os = "tvos");
 
 pub fn user_dir() -> Result<PathBuf> {
-    sdl3::filesystem::get_pref_path("", "glue5").map_err(|e| anyhow::anyhow!("no user directory: {e}"))
+    let dir = sdl3::filesystem::get_pref_path("", "glue5").map_err(|e| anyhow::anyhow!("no user directory: {e}"))?;
+    #[cfg(target_os = "ios")]
+    if let Ok(docs) = sdl3::filesystem::get_user_folder(sdl3::filesystem::Folder::DOCUMENTS) {
+        let source = docs.join("SaveImport/SGTA50001");
+        let profile = dir.join("Documents/Rockstar Games/GTA V/Profiles/Default");
+        match save_import::import(&source, &profile) {
+            Ok(Some(dest)) => log::info!("Imported story save: {}", dest.display()),
+            Ok(None) => {},
+            Err(e) => log::error!("Story save import: {e}"),
+        }
+    }
+    Ok(dir)
 }
 
 /// Where the game is looked for when nothing says otherwise.
