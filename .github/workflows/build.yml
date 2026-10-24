@@ -131,12 +131,16 @@ jobs:
                   -keyalg RSA -keysize 2048 -validity 10000 -dname "CN=Android Debug,O=Android,C=US"
           fi
 
+      - name: Test story save import
+        run: |
+          mise exec -- rustc --edition=2024 --test crates/glue5/src/save_import.rs -o "$RUNNER_TEMP/save-import-tests"
+          "$RUNNER_TEMP/save-import-tests"
       - name: Build
         run: |
           case $PLATFORM in
           ios)
               mise run ios:ipa
-              mv target/ios/Glue5.ipa Glue5-ios.ipa
+              mv target/ios/Glue5.ipa Glue5-ios-SaveImport.ipa
               ;;
           windows)
               mise run build
