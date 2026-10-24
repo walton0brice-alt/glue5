@@ -1,0 +1,32 @@
+name: Repackage iOS
+on:
+  workflow_dispatch:
+permissions:
+  contents: write
+jobs:
+  package:
+    runs-on: macos-15
+    timeout-minutes: 15
+    env:
+      GH_TOKEN: ${{ github.token }}
+    steps:
+      - uses: actions/checkout@v5
+      - name: Refresh IPA version and signature
+        shell: bash
+        run: |
+          set -euo pipefail
+          release=422553806
+          asset=$(gh api "repos/$GITHUB_REPOSITORY/releases/$release" --jq '.assets[] | select(.name == "Glue5-ios-SaveImport.ipa") | .id')
+          curl -fsSL -H "Authorization: Bearer $GH_TOKEN" -H 'Accept: application/octet-stream' "https://api.github.com/repos/$GITHUB_REPOSITORY/releases/assets/$asset" -o input.ipa
+          unzip -q input.ipa -d package
+          app="package/Payload/Glue 5.app"
+          test -d "$app"
+          codesign --verify --deep --strict --verbose=2 "$app"
+          codesign --remove-signature "$app"
+          /usr/libexec/PlistBuddy -c 'Set :CFBundleShortVersionString 1.0.1' "$app/Info.plist"
+          /usr/libexec/PlistBuddy -c 'Set :CFBundleVersion 2' "$app/Info.plist"
+          codesign --force --sign - --entitlements platform/ios/Glue5.entitlements "$app"
+          codesign --verify --deep --strict --verbose=2 "$app"
+          codesign -d --entitlements :- "$app"
+          (cd package && zip -qry ../Glue5-SaveImport-1.0.1.ipa Payload)
+          .github/scripts/draft.sh upload "$release" Glue5-SaveImport-1.0.1.ipa
