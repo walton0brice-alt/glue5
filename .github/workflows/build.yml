@@ -133,14 +133,14 @@ jobs:
 
       - name: Test story save import
         run: |
-          mise exec -- rustc --edition=2024 --test crates/glue5/src/save_import.rs -o "$RUNNER_TEMP/save-import-tests"
+          mise exec rust -- rustc --edition=2024 --test crates/glue5/src/save_import.rs -o "$RUNNER_TEMP/save-import-tests"
           "$RUNNER_TEMP/save-import-tests"
       - name: Build
         run: |
           case $PLATFORM in
           ios)
               mise run ios:ipa
-              mv target/ios/Glue5.ipa Glue5-ios-SaveImport.ipa
+              mv target/ios/Glue5.ipa Glue5-SaveRecovery-1.0.2.ipa
               ;;
           windows)
               mise run build
