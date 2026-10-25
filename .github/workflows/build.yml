@@ -133,12 +133,12 @@ jobs:
 
       - name: Apply and test private HUD source
         run: |
-          .github/scripts/draft.sh get "${{ steps.game.outputs.release }}" Glue5-HUD-source-r5-preview.zip
-          mv Glue5-HUD-source-r5-preview.zip "$RUNNER_TEMP/hud-source.zip"
+          .github/scripts/draft.sh get "${{ steps.game.outputs.release }}" Glue5-HUD-source-r6-preview.zip
+          mv Glue5-HUD-source-r6-preview.zip "$RUNNER_TEMP/hud-source.zip"
           python3 - "$RUNNER_TEMP/hud-source.zip" <<'PY'
           import sys,zipfile,hashlib,json,pathlib
           path=pathlib.Path(sys.argv[1])
-          assert hashlib.sha256(path.read_bytes()).hexdigest()=="911f7668d38c8f6f1e20aeee5949b01af25ddf26a99fc56d774f8bf5d67c6827", "Wrong HUD source package"
+          assert hashlib.sha256(path.read_bytes()).hexdigest()=="bac69a1e7a8b5f9d1495dd3fddcb6deb33ecafa849c1dec76774ba4f7d84fa76", "Wrong HUD source package"
           with zipfile.ZipFile(path) as z:
               assert z.testzip() is None
               manifest=json.loads(z.read("HUD-SOURCE-MANIFEST.json"))
