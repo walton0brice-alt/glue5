@@ -10,8 +10,8 @@ settings:
   base:
     PRODUCT_NAME: Glue 5
     PRODUCT_BUNDLE_IDENTIFIER: local.glue5
-    MARKETING_VERSION: "0.1.0"
-    CURRENT_PROJECT_VERSION: "1"
+    MARKETING_VERSION: "1.0.3"
+    CURRENT_PROJECT_VERSION: "4"
     TARGETED_DEVICE_FAMILY: "1,2"
     ARCHS: arm64
     DEAD_CODE_STRIPPING: YES
@@ -55,8 +55,8 @@ targets:
       path: Info.plist
       properties:
         CFBundleDisplayName: Glue 5
-        CFBundleShortVersionString: "1.0.2"
-        CFBundleVersion: "3"
+        CFBundleShortVersionString: "1.0.3"
+        CFBundleVersion: "4"
         UILaunchScreen: {}
         UIRequiresFullScreen: true
         # ProMotion iPhones run faster than 60 Hz only with this.
