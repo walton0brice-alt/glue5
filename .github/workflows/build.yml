@@ -140,7 +140,7 @@ jobs:
           case $PLATFORM in
           ios)
               mise run ios:ipa
-              mv target/ios/Glue5.ipa Glue5-SaveRecovery-1.0.2.ipa
+              mv target/ios/Glue5.ipa Glue5-Deluxo-Diagnostics-1.0.3.ipa
               ;;
           windows)
               mise run build
