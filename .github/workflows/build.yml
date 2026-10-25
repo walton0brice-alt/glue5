@@ -133,25 +133,30 @@ jobs:
 
       - name: Apply and test private HUD source
         run: |
-          .github/scripts/draft.sh get "${{ steps.game.outputs.release }}" Glue5-HUD-source-r6-preview.zip
-          mv Glue5-HUD-source-r6-preview.zip "$RUNNER_TEMP/hud-source.zip"
+          .github/scripts/draft.sh get "${{ steps.game.outputs.release }}" Glue5-HUD-source-r7-compat-preview.zip
+          mv Glue5-HUD-source-r7-compat-preview.zip "$RUNNER_TEMP/hud-source.zip"
           python3 - "$RUNNER_TEMP/hud-source.zip" <<'PY'
           import sys,zipfile,hashlib,json,pathlib
           path=pathlib.Path(sys.argv[1])
-          assert hashlib.sha256(path.read_bytes()).hexdigest()=="bac69a1e7a8b5f9d1495dd3fddcb6deb33ecafa849c1dec76774ba4f7d84fa76", "Wrong HUD source package"
+          assert hashlib.sha256(path.read_bytes()).hexdigest()=="bb4fd51cb884417f9e7b2875bba0dac4321a2ab54fc39b61be5e95838905b006", "Wrong HUD source package"
           with zipfile.ZipFile(path) as z:
               assert z.testzip() is None
               manifest=json.loads(z.read("HUD-SOURCE-MANIFEST.json"))
               for name,digest in manifest.items():
                   target=pathlib.Path(name)
                   assert not target.is_absolute() and ".." not in target.parts
-                  assert name.startswith(("crates/glue5/","crates/glue5-runtime/","crates/glue5-game/","platform/ios/","tools/hud-tests/"))
+                  assert name.startswith(("crates/glue5/","crates/glue5-runtime/","crates/glue5-game/","crates/glue5-mods/","platform/ios/","tools/hud-tests/"))
                   assert hashlib.sha256(z.read(name)).hexdigest()==digest
                   target.parent.mkdir(parents=True,exist_ok=True)
                   target.write_bytes(z.read(name))
           PY
           python3 tools/hud-tests/prepare.py
           mise exec rust -- cargo test --manifest-path tools/hud-tests/Cargo.toml -- --nocapture --test-threads=1
+      - name: Test old OIV compatibility parser
+        if: runner.os == 'macOS'
+        run: |
+          clang -fobjc-arc -fblocks -Iplatform/ios platform/ios/NativeOIV.m tools/hud-tests/oiv_main.m -framework Foundation -lz -o "$RUNNER_TEMP/oiv-tests"
+          python3 tools/hud-tests/oiv_test.py "$RUNNER_TEMP/oiv-tests"
       - name: Test story save import
         run: |
           mise exec rust -- rustc --edition=2024 --test crates/glue5/src/save_import.rs -o "$RUNNER_TEMP/save-import-tests"
@@ -160,8 +165,9 @@ jobs:
         run: |
           case $PLATFORM in
           ios)
+              python3 platform/ios/Scripts/build_blink.py --sdk iphoneos
               mise run ios:ipa
-              mv target/ios/Glue5.ipa Glue5-HUD-1.0.5-preview.ipa
+              mv target/ios/Glue5.ipa Glue5-HUD-1.0.5-compat-preview.ipa
               ;;
           windows)
               mise run build
