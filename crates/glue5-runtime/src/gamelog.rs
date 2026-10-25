@@ -29,7 +29,16 @@ static DROPPED: AtomicU64 = AtomicU64::new(0);
 
 /// Starts the writer; returns the log file's path.
 pub(crate) fn start(user_dir: &Path) -> io::Result<PathBuf> {
-    let path = user_dir.join("game.log");
+    let mut path = user_dir.join("game.log");
+    // iOS's preference directory is private. Make engine errors available
+    // through Files without changing the user directory or save locations.
+    #[cfg(target_os = "ios")]
+    if let Some(home) = std::env::var_os("HOME") {
+        let diagnostics = PathBuf::from(home).join("Documents/GlueDiagnostics");
+        if std::fs::create_dir_all(&diagnostics).is_ok() {
+            path = diagnostics.join("game.log");
+        }
+    }
     let file = File::create(&path)?;
     let to_stdout = std::env::var("GLUE5_ENGINE_LOG").is_ok_and(|v| v == "stdout");
     let (tx, rx) = sync_channel(QUEUE);
