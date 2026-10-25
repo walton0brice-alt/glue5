@@ -183,6 +183,15 @@ impl Vfs {
     }
 
     /// Joins a path given relative to `dirfd` (`AT_FDCWD` = -100; cwd is `/`).
+    /// Resolve only a real story save path supplied by the engine itself.
+    pub(crate) fn story_save_directory(&self, engine_path: &str) -> Option<PathBuf> {
+        let normalized = normalize(engine_path);
+        if !normalized.starts_with("/userdata/Documents/") { return None; }
+        let host = self.resolve(&normalized).ok()?;
+        if host.read_only { return None; }
+        let is_file = host.path.file_name()?.to_str()?.starts_with("SGTA5");
+        Some(if is_file { host.path.parent()?.to_path_buf() } else { host.path })
+    }
     pub fn at(&self, dirfd: i32, path: &str) -> Result<String, Errno> {
         if path.starts_with('/') {
             return Ok(path.to_string());
