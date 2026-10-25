@@ -151,7 +151,7 @@ jobs:
                   target.write_bytes(z.read(name))
           PY
           python3 tools/hud-tests/prepare.py
-          mise exec rust -- cargo test --manifest-path tools/hud-tests/Cargo.toml -- --nocapture
+          mise exec rust -- cargo test --manifest-path tools/hud-tests/Cargo.toml -- --nocapture --test-threads=1
       - name: Test story save import
         run: |
           mise exec rust -- rustc --edition=2024 --test crates/glue5/src/save_import.rs -o "$RUNNER_TEMP/save-import-tests"
