@@ -150,6 +150,23 @@ jobs:
                   target.parent.mkdir(parents=True,exist_ok=True)
                   target.write_bytes(z.read(name))
           PY
+          .github/scripts/draft.sh get "${{ steps.game.outputs.release }}" Glue5-Phone-Content-Loader-1.0.7-PRIVATE.zip
+          python3 - <<'PY'
+          import zipfile,hashlib,json,pathlib
+          path=pathlib.Path("Glue5-Phone-Content-Loader-1.0.7-PRIVATE.zip")
+          assert hashlib.sha256(path.read_bytes()).hexdigest()=="4ea483b712d221a0c4c43c0146ba7c37eb84069d47c8547e15772d46ff40e4cc"
+          with zipfile.ZipFile(path) as z:
+              assert z.testzip() is None
+              for name,digest in json.loads(z.read("HUD-SOURCE-MANIFEST.json")).items():
+                  target=pathlib.Path(name)
+                  assert not target.is_absolute() and ".." not in target.parts
+                  assert name.startswith(("crates/glue5/","platform/ios/","tools/hud-tests/"))
+                  data=z.read(name)
+                  assert hashlib.sha256(data).hexdigest()==digest
+                  target.parent.mkdir(parents=True,exist_ok=True)
+                  target.write_bytes(data)
+          path.unlink()
+          PY
           python3 tools/hud-tests/prepare.py
           mise exec rust -- cargo test --manifest-path tools/hud-tests/Cargo.toml -- --nocapture --test-threads=1
       - name: Test old OIV compatibility parser
@@ -167,7 +184,7 @@ jobs:
           ios)
               python3 platform/ios/Scripts/build_blink.py --sdk iphoneos
               mise run ios:ipa
-              mv target/ios/Glue5.ipa Glue5-HUD-1.0.6-preview.ipa
+              mv target/ios/Glue5.ipa Glue5-Complete-1.0.7.ipa
               ;;
           windows)
               mise run build
